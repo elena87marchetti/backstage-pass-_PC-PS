@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Backstage Pass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Lexend:wght@400;500;700&family=Patrick+Hand&display=swap">
+<style>
+/* Layout: one backstage column — marquee header with a tour "setlist" as navigation, one page at a time below, ending on a magazine cover. */
+:root {
+  --paper: #F5F2FF;
+  --ink: #1C1440;
+  --card: #FFFFFF;
+  --muted: #5F5789;
+  --line: #DCD5F3;
+  --hot: #D2177C;
+  --on-hot: #FFFFFF;
+  --hot-soft: #FCE4F1;
+  --marker: #FFE14D;
+  --on-marker: #1C1440;
+  --good: #0B7F62;
+  --good-soft: #DCF4EA;
+  --bad: #C42E3A;
+  --bad-soft: #FBE4E6;
+  --ticket: #ECE6FF;
+  --ticket-hover: #DFD5FF;
+  --shadow: #1C1440;
+  --display: "Bungee", "Arial Black", Impact, sans-serif;
+  --body: "Lexend", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --hand: "Patrick Hand", "Comic Sans MS", "Segoe Print", cursive;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #120D2B; --ink: #F1ECFF; --card: #1D1745; --muted: #A9A0D8; --line: #382E6E;
+    --hot: #FF5CB0; --on-hot: #1C1440; --hot-soft: #3B1739; --marker: #FFD93D; --on-marker: #1C1440;
+    --good: #45D9AC; --good-soft: #10352D; --bad: #FF7D87; --bad-soft: #3B1820;
+    --ticket: #2A2262; --ticket-hover: #362C78; --shadow: #FF5CB0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #120D2B; --ink: #F1ECFF; --card: #1D1745; --muted: #A9A0D8; --line: #382E6E;
+  --hot: #FF5CB0; --on-hot: #1C1440; --hot-soft: #3B1739; --marker: #FFD93D; --on-marker: #1C1440;
+  --good: #45D9AC; --good-soft: #10352D; --bad: #FF7D87; --bad-soft: #3B1820;
+  --ticket: #2A2262; --ticket-hover: #362C78; --shadow: #FF5CB0;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 17px/1.55 var(--body);
+}
+.wrap {
+  max-width: 840px;
+  margin: 0 auto;
+  padding-block: 20px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+h1, h2, h3 { font-family: var(--display); font-weight: 400; line-height: 1.1; text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(1.5rem, 4.5vw, 2rem); }
+h3 { font-size: 1.3rem; }
+h4 { font: 700 0.78rem/1.2 var(--body); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin: 0; }
+p { margin: 0; }
+.eyebrow { font: 700 0.75rem/1.2 var(--body); text-transform: uppercase; letter-spacing: 0.14em; color: var(--hot); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--hot); outline-offset: 3px; }
+
+/* ---------- Marquee header ---------- */
+.marquee {
+  position: relative;
+  border-radius: 20px;
+  padding: 22px 22px 16px;
+  background:
+    radial-gradient(ellipse 60% 120% at 12% -10%, color-mix(in srgb, var(--hot) 28%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 110% at 95% -20%, color-mix(in srgb, var(--marker) 30%, transparent), transparent 70%),
+    var(--card);
+  border: 2px solid var(--ink);
+  box-shadow: 6px 6px 0 var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.brand { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.brand h1 { font-size: clamp(2rem, 8vw, 3.4rem); letter-spacing: 0.01em; }
+.brand h1 span { color: var(--hot); }
+.sub { color: var(--muted); font-weight: 500; }
+.top-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.score-chip {
+  font: 400 0.95rem var(--display);
+  background: var(--marker); color: var(--on-marker);
+  padding: 8px 12px; border-radius: 999px; border: 2px solid var(--ink);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.notes-btn {
+  border: 2px solid var(--ink); background: var(--card); border-radius: 999px;
+  padding: 8px 14px; font-weight: 700; font-size: 0.92rem; cursor: pointer;
+}
+.notes-btn:hover { background: var(--ticket); }
+
+.setlist-wrap { overflow-x: auto; margin: 0 -6px; padding: 4px 6px 6px; }
+.setlist { list-style: none; margin: 0; padding: 0; display: flex; gap: 8px; width: max-content; }
+.setlist button {
+  display: flex; align-items: center; gap: 8px;
+  border: 2px solid var(--line); background: transparent; border-radius: 12px;
+  padding: 6px 12px 6px 8px; cursor: pointer; font-size: 0.88rem; font-weight: 500; white-space: nowrap;
+}
+.setlist .n { font-family: var(--display); font-size: 0.8rem; color: var(--muted); min-width: 1.6em; text-align: center; }
+.setlist button:hover { border-color: var(--ink); }
+.setlist .current button { background: var(--marker); color: var(--on-marker); border-color: var(--ink); }
+.setlist .current .n { color: var(--on-marker); }
+.setlist .done .n { color: var(--good); }
+
+/* ---------- Page panel ---------- */
+.stage { min-height: 300px; }
+.page {
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 20px;
+  padding: clamp(18px, 4vw, 32px);
+  display: flex; flex-direction: column; gap: 22px;
+  animation: rise .35s ease-out;
+}
+@keyframes rise { from { transform: translateY(8px); opacity: .6; } to { transform: none; opacity: 1; } }
+.round-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 10px 16px; }
+.round-head .titles { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.instr { color: var(--muted); max-width: 60ch; }
+.counter { font: 400 0.95rem var(--display); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.progress { height: 8px; background: var(--ticket); border-radius: 99px; overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--hot); border-radius: 99px; transition: width .3s; }
+
+.btn {
+  border: 2px solid var(--ink); border-radius: 12px; padding: 12px 20px;
+  font-weight: 700; cursor: pointer; background: var(--card);
+}
+.btn.primary { background: var(--hot); color: var(--on-hot); border-color: var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+.btn.primary:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
+.btn.primary:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn.ghost { background: transparent; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+/* ---------- Press pass ---------- */
+.pass-grid { display: grid; grid-template-columns: minmax(0, 290px) minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (max-width: 680px) { .pass-grid { grid-template-columns: minmax(0, 1fr); } .pass { max-width: 300px; margin: 0 auto; } }
+.pass {
+  position: relative; background: var(--paper); border: 2px solid var(--ink); border-radius: 16px;
+  overflow: hidden; transform: rotate(-2.5deg); box-shadow: 6px 6px 0 var(--shadow); width: 100%;
+}
+.pass-hole { width: 54px; height: 12px; border-radius: 8px; border: 2px solid var(--ink); background: var(--card); margin: 14px auto 10px; }
+.pass-band { background: var(--hot); color: var(--on-hot); font: 400 2.4rem/1 var(--display); text-align: center; letter-spacing: 0.12em; padding: 10px 0 8px; }
+.pass-body { display: flex; gap: 14px; padding: 16px; align-items: flex-start; }
+.pass-photo { flex: none; width: 76px; height: 92px; border: 2px solid var(--ink); border-radius: 10px; background: var(--ticket); display: grid; place-items: center; color: var(--hot); }
+.pass-photo svg { width: 42px; height: 42px; }
+.pass-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; font-size: 0.9rem; }
+.pass-info .lbl { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-top: 6px; }
+.pass-info .lbl:first-child { margin-top: 0; }
+.pass-info strong { font: 400 1.1rem/1.2 var(--display); overflow-wrap: anywhere; }
+.pass-foot { border-top: 2px dashed var(--ink); padding: 10px 16px 14px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; }
+.mission { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.mission p { max-width: 58ch; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.field label { font-weight: 700; font-size: 0.92rem; }
+.field input {
+  font: 500 1.1rem var(--body); padding: 12px 14px; border-radius: 12px;
+  border: 2px solid var(--ink); background: var(--paper); color: var(--ink); max-width: 340px; width: 100%;
+}
+.plan { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 460px) { .plan { grid-template-columns: minmax(0, 1fr); } }
+.plan li { background: var(--ticket); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; display: flex; flex-direction: column; }
+.plan b { font-family: var(--display); font-weight: 400; font-size: 0.8rem; color: var(--hot); letter-spacing: 0.04em; }
+
+/* ---------- Grammar notes ---------- */
+.gram { display: flex; flex-direction: column; gap: 22px; }
+.tense-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 700px) { .tense-grid { grid-template-columns: minmax(0, 1fr); } }
+.tense { border: 2px solid var(--ink); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px; background: var(--paper); min-width: 0; }
+.tense header { display: flex; flex-direction: column; gap: 6px; }
+.tense .tag { align-self: flex-start; font: 700 0.7rem var(--body); letter-spacing: .12em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; }
+.tense.simple .tag { background: var(--marker); color: var(--on-marker); }
+.tense.cont .tag { background: var(--hot); color: var(--on-hot); }
+.formula { font-weight: 500; }
+.formula b { background: var(--marker); color: var(--on-marker); padding: 0 4px; border-radius: 4px; }
+.forms { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+.forms th { width: 2em; font: 400 1.1rem var(--display); color: var(--hot); text-align: left; vertical-align: top; padding: 6px 0; }
+.forms td { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.forms tr:last-child td { border-bottom: 0; }
+.uses { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.uses li { display: flex; flex-direction: column; background: var(--card); border-radius: 10px; padding: 8px 12px; border: 1px solid var(--line); }
+.uses strong { font-size: 0.92rem; }
+.uses span { font-style: italic; color: var(--muted); font-size: 0.92rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: 0.82rem; font-weight: 500; padding: 4px 10px; border-radius: 99px; border: 1.5px solid var(--ink); background: var(--card); }
+.watch-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 700px) { .watch-grid { grid-template-columns: minmax(0, 1fr); } }
+.watch { display: flex; flex-direction: column; gap: 10px; }
+.watch-card { background: var(--ticket); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 6px; font-size: 0.92rem; min-width: 0; }
+.watch-card strong { font-size: 0.98rem; }
+.watch-card .x { color: var(--bad); text-decoration: line-through; }
+.watch-card .v { color: var(--good); font-weight: 700; }
+.future { border: 2px dashed var(--hot); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.future p { max-width: 62ch; }
+.future b { color: var(--hot); }
+.future small { color: var(--muted); font-size: 0.88rem; }
+
+/* ---------- Chat ---------- */
+.chat { display: flex; flex-direction: column; gap: 14px; }
+.line { display: flex; gap: 10px; align-items: flex-end; max-width: 92%; }
+.line.you { align-self: flex-end; flex-direction: row-reverse; }
+.av { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 400 0.85rem var(--display); border: 2px solid var(--ink); }
+.av.zara { background: conic-gradient(from 200deg, var(--hot), var(--marker), var(--hot)); color: var(--on-marker); }
+.av.you { background: var(--ink); color: var(--paper); }
+.bubble { padding: 12px 16px; border-radius: 18px; line-height: 1.55; min-width: 0; }
+.bubble .who { display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 2px; opacity: .8; }
+.you .bubble { background: var(--hot); color: var(--on-hot); border-bottom-right-radius: 4px; }
+.zara-line .bubble { background: var(--paper); border: 2px solid var(--line); border-bottom-left-radius: 4px; font-size: 1.1rem; }
+.gap {
+  display: inline-block; min-width: 5.5em; text-align: center; border-bottom: 3px solid var(--hot);
+  padding: 0 6px; font-weight: 700; line-height: 1.3;
+}
+.gap.ok { background: var(--marker); color: var(--on-marker); border-color: var(--good); border-radius: 4px 4px 0 0; }
+.gap.no { background: var(--bad-soft); color: var(--bad); border-color: var(--bad); text-decoration: line-through; border-radius: 4px 4px 0 0; }
+
+/* ---------- Ticket options ---------- */
+.tickets { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.ticket {
+  display: flex; align-items: stretch; text-align: left; border: 0; padding: 0; cursor: pointer;
+  background: var(--ticket); color: var(--ink); border-radius: 8px; min-height: 56px;
+  -webkit-mask: radial-gradient(circle 9px at 0 50%, #0000 96%, #000) left / 51% 100% no-repeat, radial-gradient(circle 9px at 100% 50%, #0000 96%, #000) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle 9px at 0 50%, #0000 96%, #000) left / 51% 100% no-repeat, radial-gradient(circle 9px at 100% 50%, #0000 96%, #000) right / 51% 100% no-repeat;
+  transition: background .15s, transform .15s;
+}
+.ticket:hover:not(:disabled) { background: var(--ticket-hover); transform: translateY(-2px); }
+.ticket:focus-visible { outline: 0; box-shadow: inset 0 0 0 3px var(--hot); }
+.ticket .stub { flex: none; width: 46px; display: grid; place-items: center; font: 400 1rem var(--display); color: var(--hot); border-right: 2px dashed color-mix(in srgb, var(--ink) 35%, transparent); }
+.ticket .txt { padding: 12px 18px 12px 14px; font-weight: 500; font-size: 1.05rem; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.ticket .txt small { font-size: 0.75rem; color: var(--muted); font-weight: 500; letter-spacing: .04em; }
+.ticket:disabled { cursor: default; }
+.ticket.ok { background: var(--good-soft); box-shadow: inset 0 0 0 3px var(--good); }
+.ticket.ok .stub { color: var(--good); }
+.ticket.no { background: var(--bad-soft); box-shadow: inset 0 0 0 3px var(--bad); }
+.ticket.no .stub { color: var(--bad); }
+.ticket.dim { opacity: .5; }
+
+/* ---------- Feedback ---------- */
+.feedback { border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; border: 2px solid; }
+.feedback.ok { background: var(--good-soft); border-color: var(--good); }
+.feedback.no { background: var(--bad-soft); border-color: var(--bad); }
+.verdict { font: 400 1.25rem var(--display); display: inline-block; transform: rotate(-2deg); animation: stamp .3s cubic-bezier(.2, 1.6, .5, 1); transform-origin: left center; }
+.feedback.ok .verdict { color: var(--good); }
+.feedback.no .verdict { color: var(--bad); }
+@keyframes stamp { from { transform: rotate(-8deg) scale(1.5); opacity: 0; } to { transform: rotate(-2deg) scale(1); opacity: 1; } }
+.feedback p { max-width: 64ch; }
+.feedback b { font-weight: 700; }
+
+/* ---------- Notebook (question builder) ---------- */
+.notebook {
+  border: 2px solid var(--ink); border-radius: 14px; padding: 14px 16px 18px;
+  background: repeating-linear-gradient(to bottom, var(--paper) 0 46px, var(--line) 46px 48px);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.notebook .label { font: 700 0.72rem var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.answer-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 52px; font-family: var(--hand); font-size: 1.4rem; }
+.answer-line .placeholder { color: var(--muted); font-size: 1.15rem; }
+.answer-line .qm { font-size: 1.6rem; font-weight: 700; }
+.tile {
+  font: 400 1.3rem/1 var(--hand); padding: 9px 13px 8px; border-radius: 10px; cursor: pointer;
+  border: 2px solid var(--ink); background: var(--card); color: var(--ink); box-shadow: 3px 3px 0 var(--ink);
+  transition: transform .12s;
+}
+.tile:hover:not(:disabled) { transform: translateY(-2px); }
+.tile:disabled { cursor: default; }
+.tile.used { opacity: .25; box-shadow: none; }
+.answer-line .tile { background: var(--marker); color: var(--on-marker); }
+.answer-line.ok .tile { background: var(--good-soft); color: var(--ink); border-color: var(--good); box-shadow: 3px 3px 0 var(--good); }
+.answer-line.no .tile { background: var(--bad-soft); color: var(--ink); border-color: var(--bad); box-shadow: 3px 3px 0 var(--bad); }
+.bank { display: flex; flex-wrap: wrap; gap: 10px; }
+.bank-note { font-size: 0.9rem; color: var(--muted); }
+.bank-note b { color: var(--hot); }
+
+/* ---------- Gap story ---------- */
+.story { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; counter-reset: s; }
+.story li { counter-increment: s; display: grid; grid-template-columns: 2.2em minmax(0, 1fr); gap: 8px; padding: 12px 14px; border-radius: 14px; background: var(--paper); border: 2px solid var(--line); }
+.story li::before { content: counter(s); font: 400 1rem var(--display); color: var(--hot); padding-top: 6px; }
+.story li.ok { border-color: var(--good); background: var(--good-soft); }
+.story li.no { border-color: var(--bad); background: var(--bad-soft); }
+.sent { line-height: 2.3; font-size: 1.08rem; }
+.sent input {
+  font: 600 1.02rem var(--body); padding: 4px 8px; border: 0; border-bottom: 3px solid var(--hot);
+  background: var(--card); color: var(--ink); border-radius: 6px 6px 0 0; width: 10.5em; max-width: 100%;
+}
+.sent input:disabled { opacity: 1; -webkit-text-fill-color: var(--ink); }
+.sent .hint { font-weight: 700; color: var(--hot); white-space: nowrap; }
+.fix { font-size: 0.92rem; line-height: 1.5; margin-top: 4px; }
+.fix b { color: var(--good); }
+
+/* ---------- Round complete ---------- */
+.done-box { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.big-score { font: 400 clamp(3rem, 14vw, 5rem)/1 var(--display); font-variant-numeric: tabular-nums; }
+.big-score small { font-size: .45em; color: var(--muted); }
+
+/* ---------- Cover story ---------- */
+.cover {
+  background: var(--ink); color: var(--paper); border-radius: 20px; padding: clamp(20px, 5vw, 36px);
+  display: flex; flex-direction: column; gap: 18px; border: 2px solid var(--ink); box-shadow: 8px 8px 0 var(--hot);
+  animation: rise .4s ease-out;
+}
+.masthead { font: 400 clamp(2.2rem, 11vw, 4.6rem)/0.95 var(--display); color: var(--marker); letter-spacing: 0.02em; overflow-wrap: anywhere; }
+.issue { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; font-size: 0.78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; border-top: 2px solid var(--paper); border-bottom: 2px solid var(--paper); padding: 8px 0; }
+.headline { font: 400 clamp(1.6rem, 6vw, 2.6rem)/1.05 var(--display); text-wrap: balance; }
+.headline span { color: var(--hot); }
+.byline { font-weight: 500; }
+.scorecard { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 20px; align-items: center; background: color-mix(in srgb, var(--paper) 10%, transparent); border-radius: 16px; padding: 18px; }
+@media (max-width: 560px) { .scorecard { grid-template-columns: minmax(0, 1fr); } }
+.stars { display: flex; gap: 4px; }
+.stars svg { width: 30px; height: 30px; }
+.stars .on { fill: var(--marker); }
+.stars .off { fill: color-mix(in srgb, var(--paper) 25%, transparent); }
+.badge { font: 400 1.3rem var(--display); color: var(--marker); }
+.rounds { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.95rem; }
+.rounds li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid color-mix(in srgb, var(--paper) 25%, transparent); padding-bottom: 4px; font-variant-numeric: tabular-nums; }
+.rounds .missing { color: var(--marker); }
+.article { background: var(--card); color: var(--ink); border-radius: 14px; padding: clamp(16px, 4vw, 26px); display: flex; flex-direction: column; gap: 14px; }
+.article .intro { font-size: 1.05rem; max-width: 62ch; }
+.qa { display: flex; flex-direction: column; gap: 4px; max-width: 64ch; }
+.qa .q { font-weight: 700; color: var(--hot); }
+.qa .a mark, .qa .a .hl { background: var(--marker); color: var(--on-marker); padding: 0 3px; border-radius: 3px; }
+.cover .actions .btn { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+.cover .actions .btn.primary { background: var(--hot); color: var(--on-hot); border-color: var(--paper); box-shadow: 4px 4px 0 var(--paper); }
+
+/* ---------- Notes overlay ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, var(--ink) 55%, transparent);
+  display: flex; justify-content: center; align-items: flex-start; overflow-y: auto;
+  padding-top: max(16px, env(safe-area-inset-top, 0px)); padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.sheet { background: var(--card); color: var(--ink); border: 2px solid var(--ink); border-radius: 20px; padding: clamp(16px, 4vw, 28px); width: 100%; max-width: 820px; display: flex; flex-direction: column; gap: 18px; }
+.sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+body { margin: 0; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="marquee">
+    <div class="top">
+      <div class="brand">
+        <span class="eyebrow">Starstruck Magazine · gioco-intervista</span>
+        <h1>Backstage <span>Pass</span></h1>
+        <p class="sub">Present simple e present continuous</p>
+      </div>
+      <div class="top-right">
+        <span class="score-chip" id="score-chip" aria-live="polite">0 / 30</span>
+        <button class="notes-btn" data-act="notes" type="button">Note di grammatica</button>
+      </div>
+    </div>
+    <nav class="setlist-wrap" aria-label="Pagine del gioco">
+      <ol class="setlist" id="setlist"></ol>
+    </nav>
+  </header>
+  <main id="stage" class="stage"></main>
+</div>
+
+<div class="overlay" id="notes" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="notes-title">
+    <div class="sheet-head">
+      <h2 id="notes-title">Note di grammatica</h2>
+      <button class="btn" data-act="close-notes" type="button">Chiudi</button>
+    </div>
+    <div id="notes-body"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  /* ================= CONTENT ================= */
+  var PAGES = [
+    { id: "pass",  label: "Pass stampa" },
+    { id: "brief", label: "Briefing" },
+    { id: "r1",    label: "Riscaldamento" },
+    { id: "r2",    label: "Fai le domande" },
+    { id: "r3",    label: "La vita in tour" },
+    { id: "r4",    label: "Perché questo tempo?" },
+    { id: "cover", label: "Copertina" }
+  ];
+
+  var R1 = [
+    { q: "Hi Zara! Thanks for meeting me. Are you busy?", a: ["A little! Right now I ", " my make-up for the show."],
+      opts: ["do", "am doing", "does"], ok: 1,
+      why: "<b>Right now</b> = sta succedendo in questo momento → present continuous: <b>am + -ing</b>." },
+    { q: "How do you stay so good at singing?", a: ["I ", " for two hours every day."],
+      opts: ["practise", "am practising", "practises"], ok: 0,
+      why: "<b>Every day</b> = un'abitudine → present simple. Con <i>I</i> non si aggiunge la -s." },
+    { q: "Is music a family thing for you?", a: ["Yes! My little brother ", " the drums with his school band every Saturday."],
+      opts: ["play", "is playing", "plays"], ok: 2,
+      why: "<b>Every Saturday</b> = un'abitudine → present simple. Con <i>he</i> si aggiunge la <b>-s</b>: plays." },
+    { q: "What's that noise outside?", a: ["Listen! My fans ", " my song under the window."],
+      opts: ["sing", "are singing", "sings"], ok: 1,
+      why: "<b>Listen!</b> ci dice che sta succedendo adesso → present continuous: <b>are singing</b>." },
+    { q: "What do you eat before a concert?", a: ["Something light. I never ", " pizza before a show. Only after!"],
+      opts: ["eat", "am eating", "eats"], ok: 0,
+      why: "<b>Never</b> è un avverbio di frequenza, quindi si tratta di un'abitudine → present simple: I never <b>eat</b>." },
+    { q: "Where is your band right now?", a: ["They ", " on stage. Can you hear them?"],
+      opts: ["play", "are playing", "plays"], ok: 1,
+      why: "<b>Can you hear them?</b> ci dice che sta succedendo adesso → present continuous: <b>are playing</b>." },
+    { q: "What are your plans for tomorrow?", a: ["", " to Paris with my band. We booked the flight last week."],
+      opts: ["I'm flying", "I fly", "I flies"], ok: 0,
+      why: "Un piano già organizzato (il volo è prenotato) → present continuous per il futuro: <b>I'm flying</b>." },
+    { q: "What do you think of your Italian fans?", a: ["I ", " them. They're amazing!"],
+      opts: ["am loving", "loves", "love"], ok: 2,
+      why: "<b>Love</b> è un verbo di stato (esprime un sentimento), quindi di solito non si usa al continuous: I <b>love</b> them." }
+  ];
+
+  var R2 = [
+    { words: ["What", "are", "you", "doing", "at the moment"], extra: "do",
+      answer: "I<mark>'m doing</mark> an interview with you, of course!",
+      why: "Sta succedendo adesso → parola interrogativa + <b>are</b> + you + verbo<b>-ing</b>. La parola in più è <i>do</i>." },
+    { words: ["Where", "do", "you", "usually", "write", "your songs"], extra: "are",
+      answer: "In my bedroom, late at night. I <mark>write</mark> in a notebook first.",
+      why: "Un'abitudine (<b>usually</b>) → parola interrogativa + <b>do</b> + you + verbo base. La parola in più è <i>are</i>." },
+    { words: ["Does", "your mum", "come", "to", "your concerts"], extra: "comes",
+      answer: "Yes, she <mark>comes</mark> to every show in Italy!",
+      why: "Dopo <b>does</b> il verbo non prende la -s: Does your mum <b>come</b>…? La parola in più è <i>comes</i>." },
+    { words: ["Who", "are", "you", "meeting", "after the show"], extra: "do",
+      answer: "I<mark>'m meeting</mark> my best friend for pizza. Finally!",
+      why: "Un piano per stasera → parola interrogativa + <b>are</b> + you + verbo<b>-ing</b>. La parola in più è <i>do</i>." },
+    { words: ["How often", "do", "you", "go", "on tour"], extra: "are",
+      answer: "I <mark>go</mark> on tour once a year, usually in autumn.",
+      why: "<b>How often</b> chiede quanto spesso fai qualcosa (un'abitudine) → present simple: How often <b>do</b> you <b>go</b>…? La parola in più è <i>are</i>." },
+    { words: ["Is", "your band", "playing", "any new songs", "tonight"], extra: "play",
+      answer: "Yes! We<mark>'re playing</mark> three new songs from my next album.",
+      why: "Un piano per stasera → <b>Is</b> + your band + <b>playing</b>…? La parola in più è <i>play</i>." }
+  ];
+
+  var R3 = [
+    { pre: "On tour, I usually", verb: "wake", post: "up at 10 o'clock.", ok: ["wake"],
+      why: "Un'abitudine (usually) → present simple. I + verbo base." },
+    { pre: "My manager Leo", verb: "organise", post: "my timetable every week.", ok: ["organises", "organizes"],
+      why: "Every week = un'abitudine. Con he si aggiunge la -s: organises." },
+    { pre: "At the moment, my band and I", verb: "record", post: "a new album.", ok: ["are recording"],
+      why: "At the moment → present continuous. My band and I = we → are recording." },
+    { pre: "Leo", verb: "not / like", post: "loud music, so he wears earplugs at my concerts!", ok: ["doesn't like", "does not like"],
+      why: "Un fatto su Leo → present simple negativo: he doesn't + verbo base (like, non likes)." },
+    { pre: "Shh! The sound engineer", verb: "check", post: "the microphones.", ok: ["is checking"],
+      why: "Shh! = sta succedendo adesso → is checking." },
+    { pre: "Today I", verb: "not / wear", post: "my red jacket because it's too hot.", ok: ["am not wearing", "'m not wearing"],
+      why: "Today = una situazione di oggi, temporanea → present continuous negativo: I am not wearing." },
+    { pre: "Next Saturday I", verb: "sing", post: "on a TV show in Rome.", ok: ["am singing", "'m singing"],
+      why: "Un piano futuro già organizzato → present continuous: I am singing." },
+    { pre: "My cousin", verb: "study", post: "in Milan this year, so she's coming to the show tonight.", ok: ["is studying"],
+      why: "This year = una situazione temporanea → present continuous. Ortografia: study → studying." }
+  ];
+
+  var CATS = [
+    { k: "routine",   name: "Abitudine o fatto",          tense: "present simple" },
+    { k: "now",       name: "Adesso o in questo periodo", tense: "present continuous" },
+    { k: "plan",      name: "Piano futuro",               tense: "present continuous" }
+  ];
+  var R4 = [
+    { s: "I <u>drink</u> hot lemon tea before every show.", k: "routine",
+      why: "<b>Every show</b>: è una cosa che fa sempre → abitudine → present simple." },
+    { s: "I <u>go</u> to the gym three times a week.", k: "routine",
+      why: "<b>Three times a week</b>: dice quanto spesso lo fa → abitudine → present simple." },
+    { s: "Wait a second, I<u>'m putting on</u> my stage boots.", k: "now",
+      why: "Lo sta facendo mentre parla → azione in corso adesso → present continuous." },
+    { s: "I<u>'m having</u> dinner with my family on Sunday.", k: "plan",
+      why: "Un appuntamento personale: il giorno e le persone sono già decisi → piano futuro → present continuous." },
+    { s: "My guitar <u>has</u> six strings.", k: "routine",
+      why: "È sempre vero → un fatto → present simple. <i>Have</i> (= possedere) è un verbo di stato." },
+    { s: "This week I<u>'m learning</u> a new dance for the tour.", k: "now",
+      why: "<b>This week</b>: una cosa temporanea, che succede in questo periodo → present continuous." },
+    { s: "Look! My manager <u>is waving</u> at me from the door.", k: "now",
+      why: "<b>Look!</b> ci dice che sta succedendo adesso → present continuous." },
+    { s: "We<u>'re visiting</u> Japan next spring. The hotels are booked!", k: "plan",
+      why: "<b>Booked</b> = prenotato, quindi già organizzato → piano futuro → present continuous." }
+  ];
+
+  var MAX = R1.length + R2.length + R3.length + R4.length;
+  var YES = ["Spot on!", "Exactly!", "Great answer!", "Perfect!"];
+  var NOPE = ["Not quite", "Almost!", "Close, but no"];
+
+  var MIC = '<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="22" y="6" width="20" height="32" rx="10" fill="currentColor"/><path d="M14 30a18 18 0 0 0 36 0" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M32 48v9M22 58h20" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none"/></svg>';
+  var STAR = '<path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z"/>';
+
+  /* ================= STATE ================= */
+  function fresh() {
+    return {
+      page: 0, name: "",
+      r1: { i: 0, score: 0, answers: [] },
+      r2: { i: 0, score: 0, picked: [], results: [], orders: makeOrders() },
+      r3: { values: [], checked: false, score: 0, results: [] },
+      r4: { i: 0, score: 0, answers: [] }
+    };
+  }
+  function makeOrders() {
+    return R2.map(function (q) {
+      var n = q.words.length + 1, idx = [], i, j, t, same;
+      for (i = 0; i < n; i++) idx.push(i);
+      do {
+        for (i = n - 1; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
+        same = idx.slice(0, n - 1).every(function (v, k) { return v === k; });
+      } while (same);
+      return idx;
+    });
+  }
+  var state = fresh();
+
+  /* ================= HELPERS ================= */
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function pick(arr, i) { return arr[i % arr.length]; }
+  function norm(s) { return String(s || "").toLowerCase().replace(/[’‘`]/g, "'").replace(/\s+/g, " ").replace(/[.!?]+$/, "").trim(); }
+  function total() { return state.r1.score + state.r2.score + state.r3.score + state.r4.score; }
+  function reporter() { return state.name.trim() || "Reporter"; }
+  function initials() { var n = reporter().split(/\s+/); return (n[0][0] + (n[1] ? n[1][0] : "")).toUpperCase(); }
+  function doneRound(id) {
+    if (id === "r1") return state.r1.i >= R1.length;
+    if (id === "r2") return state.r2.i >= R2.length;
+    if (id === "r3") return state.r3.checked;
+    if (id === "r4") return state.r4.i >= R4.length;
+    return false;
+  }
+  function roundHead(num, title, instr, i, n) {
+    var pct = Math.round((i / n) * 100);
+    return '<div class="round-head"><div class="titles"><span class="eyebrow">Round ' + num + ' di 4</span><h2>' + title + '</h2>' + (instr ? '<p class="instr">' + instr + '</p>' : '') + '</div>' +
+      (n ? '<span class="counter">' + Math.min(i + 1, n) + ' / ' + n + '</span>' : '') + '</div>' +
+      (n ? '<div class="progress" aria-hidden="true"><i style="width:' + pct + '%"></i></div>' : '');
+  }
+  function feedback(ok, idx, html) {
+    return '<div class="feedback ' + (ok ? "ok" : "no") + '" role="status"><span class="verdict">' + (ok ? pick(YES, idx) : pick(NOPE, idx)) + '</span>' + html + '</div>';
+  }
+  function roundDone(num, title, score, max, next, key) {
+    var msg = score === max ? "Round perfetto. Zara è colpita!" : score >= max * 0.6 ? "Bel lavoro! Rileggi le spiegazioni delle risposte sbagliate." : "Rileggi le note di grammatica, poi rigioca questo round.";
+    return '<section class="page">' + roundHead(num, title, "", 0, 0) +
+      '<div class="done-box"><span class="eyebrow">Round completato</span><div class="big-score">' + score + '<small> / ' + max + '</small></div><p>' + msg + '</p>' +
+      '<div class="actions"><button class="btn primary" type="button" data-act="go" data-to="' + next + '" data-autofocus>' + (next === 6 ? "Vai alla copertina" : "Round successivo") + '</button>' +
+      '<button class="btn ghost" type="button" data-act="replay" data-key="' + key + '">Rigioca questo round</button></div></div></section>';
+  }
+
+  /* ================= GRAMMAR ================= */
+  function chips(list) { return '<div class="chips">' + list.map(function (w) { return '<span lang="en">' + w + "</span>"; }).join("") + "</div>"; }
+  function grammarHTML() {
+    return '<div class="gram">' +
+      '<div class="tense-grid">' +
+        '<article class="tense simple"><header><span class="tag">Tempo 1</span><h3>Present simple</h3>' +
+          '<p class="formula">I / you / we / they <b>sing</b> · he / she / it <b>sings</b></p></header>' +
+          '<table class="forms" lang="en"><tr><th>+</th><td>Zara <b>sings</b> every day.</td></tr><tr><th>−</th><td>She <b>doesn\'t sing</b> at breakfast.</td></tr><tr><th>?</th><td><b>Does</b> she <b>sing</b> in Italian?</td></tr></table>' +
+          '<h4>Si usa per</h4><ul class="uses">' +
+            '<li><strong>Abitudini e routine</strong><span lang="en">I practise every day.</span></li>' +
+            '<li><strong>Fatti sempre veri</strong><span lang="en">My guitar has six strings.</span></li></ul>' +
+          '<h4>Parole chiave</h4>' + chips(["always", "usually", "often", "sometimes", "never", "every day", "once a week", "on Mondays", "How often…?"]) +
+        '</article>' +
+        '<article class="tense cont"><header><span class="tag">Tempo 2</span><h3>Present continuous</h3>' +
+          '<p class="formula">am / is / are + verbo<b>-ing</b></p></header>' +
+          '<table class="forms" lang="en"><tr><th>+</th><td>I<b>\'m singing</b> right now.</td></tr><tr><th>−</th><td>She <b>isn\'t sleeping</b>.</td></tr><tr><th>?</th><td><b>Are</b> you <b>recording</b> a song?</td></tr></table>' +
+          '<h4>Si usa per</h4><ul class="uses">' +
+            '<li><strong>Azioni in corso adesso</strong><span lang="en">Listen! The fans are singing.</span></li>' +
+            '<li><strong>Situazioni temporanee</strong><span lang="en">This week I\'m learning a new dance.</span></li>' +
+            '<li><strong>Piani futuri già organizzati</strong><span lang="en">I\'m flying to Paris tomorrow.</span></li></ul>' +
+          '<h4>Parole chiave</h4>' + chips(["now", "right now", "at the moment", "Look!", "Listen!", "today", "this week", "tonight", "tomorrow", "next Saturday"]) +
+        '</article>' +
+      '</div>' +
+      '<div class="watch"><h4>Attenzione!</h4><div class="watch-grid">' +
+        '<div class="watch-card"><strong>he / she / it + -s</strong><span>play → plays</span><span>watch → watch<b>es</b>, go → go<b>es</b></span><span>study → stud<b>ies</b>, have → <b>has</b></span><span>Ma nelle domande: Does she <span class="v">play</span>? (non <span class="x">plays</span>)</span></div>' +
+        '<div class="watch-card"><strong>Come si scrive la forma -ing</strong><span>sing → singing</span><span>dance → danc<b>ing</b> (togli la -e)</span><span>swim → swi<b>mm</b>ing (raddoppia la consonante)</span><span>lie → l<b>y</b>ing (ie diventa y)</span></div>' +
+        '<div class="watch-card"><strong>Verbi di stato: di solito senza -ing</strong><span lang="en">love, like, hate, want, need, know, understand, believe</span><span>have (= possedere)</span><span><span class="x" lang="en">I\'m loving my fans.</span></span><span><span class="v" lang="en">I love my fans.</span></span></div>' +
+      '</div></div>' +
+      '<div class="future"><h4>Parlare del futuro</h4>' +
+        '<p>Per i <b>piani già organizzati</b> usa il present continuous: <span lang="en">I<b>\'m flying</b> to Paris tomorrow. We<b>\'re visiting</b> Japan next spring.</span></p>' +
+        '<small>L\'espressione di tempo (<i>tomorrow</i>, <i>next week</i>, <i>on Sunday</i>) ci dice che parliamo del futuro e non di adesso.</small></div>' +
+    '</div>';
+  }
+
+  /* ================= PAGES ================= */
+  function pPass() {
+    var rounds = [["Round 1", "Riscaldamento: scegli le parole di Zara"], ["Round 2", "Costruisci le tue domande"], ["Round 3", "Scrivi della vita in tour"], ["Round 4", "Perché questo tempo?"]];
+    return '<section class="page"><div class="pass-grid">' +
+      '<div class="pass" aria-label="Il tuo pass stampa"><div class="pass-hole"></div><div class="pass-band">PRESS</div>' +
+        '<div class="pass-body"><div class="pass-photo">' + MIC + '</div><div class="pass-info">' +
+          '<span class="lbl">Giornalista</span><strong id="pass-name">' + esc(state.name.trim() || "Il tuo nome") + '</strong>' +
+          '<span class="lbl">Rivista</span><span>Starstruck</span>' +
+          '<span class="lbl">Accesso</span><span>Backstage · Camerino 4</span></div></div>' +
+        '<div class="pass-foot">STARLIGHT WORLD TOUR · MILANO · STASERA ORE 21</div></div>' +
+      '<div class="mission"><span class="eyebrow">La tua missione</span><h2>Intervista Zara Bloom</h2>' +
+        '<p>La pop star Zara Bloom canta a Milano stasera. Hai 20 minuti nel suo camerino prima del concerto.</p>' +
+        '<p>Fai buone domande e scrivi le sue risposte con il tempo verbale giusto. Se fai un ottimo lavoro, la tua intervista va sulla copertina di <i>Starstruck</i>.</p>' +
+        '<div class="field"><label for="reporter-name">Scrivi il tuo nome da giornalista</label><input id="reporter-name" maxlength="24" autocomplete="off" placeholder="es. Sofia R." value="' + esc(state.name) + '"></div>' +
+        '<ul class="plan">' + rounds.map(function (r) { return "<li><b>" + r[0] + "</b>" + r[1] + "</li>"; }).join("") + '</ul>' +
+        '<div class="actions"><button class="btn primary" type="button" data-act="go" data-to="1">Leggi il briefing</button></div>' +
+      '</div></div></section>';
+  }
+
+  function pBrief() {
+    return '<section class="page"><div class="round-head"><div class="titles"><span class="eyebrow">Prima dell\'intervista</span><h2>Briefing per il giornalista</h2>' +
+      '<p class="instr">Zara ti parlerà delle sue abitudini e di quello che sta succedendo proprio ora. Prima leggi queste note. Puoi riaprirle quando vuoi con il pulsante <b>Note di grammatica</b>.</p></div></div>' +
+      grammarHTML() +
+      '<div class="actions"><button class="btn primary" type="button" data-act="go" data-to="2">Bussa alla porta di Zara</button></div></section>';
+  }
+
+  function chatLine(who, html) {
+    if (who === "you") return '<div class="line you"><span class="av you" aria-hidden="true">' + esc(initials()) + '</span><div class="bubble" lang="en"><span class="who" lang="it">Tu</span>' + html + '</div></div>';
+    return '<div class="line zara-line"><span class="av zara" aria-hidden="true">ZB</span><div class="bubble" lang="en"><span class="who">Zara</span>' + html + '</div></div>';
+  }
+
+  function pR1() {
+    var r = state.r1, n = R1.length;
+    if (r.i >= n) return roundDone(1, "Riscaldamento", r.score, n, 3, "r1");
+    var q = R1[r.i], ans = r.answers[r.i], answered = ans !== undefined;
+    var gap = answered ? '<span class="gap ' + (ans === q.ok ? "ok" : "no") + '">' + esc(q.opts[ans]) + '</span>' : '<span class="gap" aria-label="spazio vuoto">&nbsp;</span>';
+    var html = '<section class="page">' + roundHead(1, "Riscaldamento", "Leggi la tua domanda. Poi scegli le parole giuste per completare la risposta di Zara.", r.i, n) +
+      '<div class="chat">' + chatLine("you", esc(q.q)) + chatLine("zara", esc(q.a[0]) + gap + esc(q.a[1])) + '</div>' +
+      '<div class="tickets" role="group" aria-label="Scegli la risposta">' + q.opts.map(function (o, k) {
+        var cls = "";
+        if (answered) cls = k === q.ok ? "ok" : (k === ans ? "no" : "dim");
+        return '<button class="ticket ' + cls + '" type="button" data-act="r1" data-k="' + k + '"' + (answered ? " disabled" : "") + '><span class="stub">' + "ABC"[k] + '</span><span class="txt" lang="en">' + esc(o) + '</span></button>';
+      }).join("") + '</div>';
+    if (answered) {
+      var ok = ans === q.ok;
+      html += feedback(ok, r.i, (ok ? "" : '<p>La risposta giusta è <b lang="en">' + esc(q.opts[q.ok]) + "</b>.</p>") + "<p>" + q.why + "</p>");
+      html += '<div class="actions"><button class="btn primary" type="button" data-act="r1-next" data-autofocus>' + (r.i === n - 1 ? "Fine del round" : "Domanda successiva") + '</button></div>';
+    }
+    return html + '</section>';
+  }
+
+  function pR2() {
+    var r = state.r2, n = R2.length;
+    if (r.i >= n) return roundDone(2, "Fai le domande", r.score, n, 4, "r2");
+    var q = R2[r.i], tiles = q.words.concat([q.extra]), order = r.orders[r.i], res = r.results[r.i];
+    var lineCls = res ? (res.ok ? " ok" : " no") : "";
+    var picked = res ? res.picked : r.picked;
+    var line = picked.length ? picked.map(function (t, p) {
+      return '<button class="tile" type="button" lang="en" data-act="r2-unpick" data-p="' + p + '"' + (res ? " disabled" : "") + ' aria-label="Togli ' + esc(tiles[t]) + '">' + esc(tiles[t]) + '</button>';
+    }).join("") + '<span class="qm">?</span>' : '<span class="placeholder">Tocca le parole qui sotto per scrivere la domanda…</span>';
+    var html = '<section class="page">' + roundHead(2, "Fai le domande", "Metti le parole in ordine per formare la tua domanda. Attenzione: c'è una parola in più!", r.i, n) +
+      '<div class="notebook"><span class="label">Taccuino del giornalista · domanda ' + (r.i + 1) + '</span><div class="answer-line' + lineCls + '" aria-live="polite">' + line + '</div></div>';
+    if (!res) {
+      html += '<p class="bank-note">Tocca una parola per aggiungerla. Toccala di nuovo nel taccuino per toglierla. <b>Una parola è in più.</b></p>' +
+        '<div class="bank" lang="en">' + order.map(function (t) {
+          var used = r.picked.indexOf(t) !== -1;
+          return '<button class="tile' + (used ? " used" : "") + '" type="button" data-act="r2-pick" data-t="' + t + '"' + (used ? " disabled" : "") + '>' + esc(tiles[t]) + '</button>';
+        }).join("") + '</div>' +
+        '<div class="actions"><button class="btn primary" type="button" data-act="r2-check"' + (r.picked.length < 2 ? " disabled" : "") + '>Chiedi a Zara</button>' +
+        '<button class="btn ghost" type="button" data-act="r2-clear"' + (r.picked.length ? "" : " disabled") + '>Cancella</button></div>';
+    } else {
+      var correct = q.words.join(" ") + "?";
+      html += feedback(res.ok, r.i, (res.ok ? "" : '<p>La domanda corretta è: <b lang="en">' + esc(correct) + "</b></p>") + "<p>" + q.why + "</p>");
+      html += '<div class="chat">' + chatLine("you", esc(correct)) + chatLine("zara", q.answer) + '</div>';
+      html += '<div class="actions"><button class="btn primary" type="button" data-act="r2-next" data-autofocus>' + (r.i === n - 1 ? "Fine del round" : "Domanda successiva") + '</button></div>';
+    }
+    return html + '</section>';
+  }
+
+  function pR3() {
+    var r = state.r3;
+    var html = '<section class="page">' + roundHead(3, "La vita in tour", "Zara ti racconta la sua vita in tour. Scrivi il verbo tra parentesi al present simple o al present continuous.", 0, 0) +
+      '<ol class="story">' + R3.map(function (it, k) {
+        var cls = r.checked ? (r.results[k] ? "ok" : "no") : "";
+        var v = r.values[k] || "";
+        var fix = "";
+        if (r.checked) fix = r.results[k] ? '<div class="fix">✓ ' + it.why + '</div>' : '<div class="fix">Risposta: <b lang="en">' + esc(it.ok[0]) + '</b>. ' + it.why + '</div>';
+        return '<li class="' + cls + '"><div><div class="sent" lang="en">' + esc(it.pre) + ' <input id="gap-' + k + '" data-gap="' + k + '" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="' + esc(it.pre + " … (" + it.verb + ") " + it.post) + '" value="' + esc(v) + '"' + (r.checked ? " disabled" : "") + '> <span class="hint">(' + esc(it.verb) + ')</span> ' + esc(it.post) + '</div>' + fix + '</div></li>';
+      }).join("") + '</ol>';
+    if (!r.checked) {
+      html += '<div class="actions"><button class="btn primary" type="button" data-act="r3-check">Controlla le risposte</button></div>';
+    } else {
+      var n = R3.length;
+      html += feedback(r.score >= n * 0.6, r.score, "<p>Hai scritto correttamente <b>" + r.score + " verbi su " + n + "</b>.</p>");
+      html += '<div class="actions"><button class="btn primary" type="button" data-act="go" data-to="5" data-autofocus>Round successivo</button><button class="btn ghost" type="button" data-act="replay" data-key="r3">Rigioca questo round</button></div>';
+    }
+    return html + '</section>';
+  }
+
+  function pR4() {
+    var r = state.r4, n = R4.length;
+    if (r.i >= n) return roundDone(4, "Perché questo tempo?", r.score, n, 6, "r4");
+    var it = R4[r.i], ans = r.answers[r.i], answered = ans !== undefined;
+    var html = '<section class="page">' + roundHead(4, "Perché questo tempo?", "Zara dice queste frasi durante l'intervista. Perché usa questo tempo verbale? Scegli il motivo.", r.i, n) +
+      '<div class="chat">' + chatLine("zara", it.s.replace(/<u>/g, '<span class="gap ok">').replace(/<\/u>/g, "</span>")) + '</div>' +
+      '<div class="tickets" role="group" aria-label="Scegli il motivo">' + CATS.map(function (c, k) {
+        var cls = "";
+        if (answered) cls = c.k === it.k ? "ok" : (c.k === ans ? "no" : "dim");
+        return '<button class="ticket ' + cls + '" type="button" data-act="r4" data-k="' + c.k + '"' + (answered ? " disabled" : "") + '><span class="stub">' + "ABCD"[k] + '</span><span class="txt">' + c.name + '<small lang="en">' + c.tense + '</small></span></button>';
+      }).join("") + '</div>';
+    if (answered) {
+      var ok = ans === it.k;
+      var right = CATS.filter(function (c) { return c.k === it.k; })[0];
+      html += feedback(ok, r.i + 1, (ok ? "" : "<p>Il motivo giusto è <b>" + right.name + "</b>.</p>") + "<p>" + it.why + "</p>");
+      html += '<div class="actions"><button class="btn primary" type="button" data-act="r4-next" data-autofocus>' + (r.i === n - 1 ? "Fine del round" : "Frase successiva") + '</button></div>';
+    }
+    return html + '</section>';
+  }
+
+  function pCover() {
+    var s = total(), filled = Math.round((s / MAX) * 5);
+    var badge = s >= 26 ? ["Star Reporter", "La tua intervista è in copertina!"] : s >= 18 ? ["Rising Reporter", "Ottimo lavoro! La tua intervista è a pagina 3."] : ["Trainee Reporter", "Buon inizio! Rileggi le note di grammatica e rigioca per arrivare in copertina."];
+    var rounds = [["Riscaldamento", "r1", state.r1.score, R1.length, 2], ["Fai le domande", "r2", state.r2.score, R2.length, 3], ["La vita in tour", "r3", state.r3.score, R3.length, 4], ["Perché questo tempo?", "r4", state.r4.score, R4.length, 5]];
+    var missing = rounds.filter(function (r) { return !doneRound(r[1]); });
+    var stars = ""; for (var i = 0; i < 5; i++) stars += '<svg viewBox="0 0 24 24" class="' + (i < filled ? "on" : "off") + '" aria-hidden="true">' + STAR + "</svg>";
+    var qa = R1.map(function (q) {
+      return '<div class="qa"><span class="q">' + esc(q.q) + '</span><span class="a">' + esc(q.a[0]) + '<span class="hl">' + esc(q.opts[q.ok]) + '</span>' + esc(q.a[1]) + '</span></div>';
+    }).concat(R2.map(function (q) {
+      return '<div class="qa"><span class="q">' + esc(q.words.join(" ")) + '?</span><span class="a">' + q.answer + '</span></div>';
+    })).join("");
+    return '<section class="cover" aria-label="La tua copertina">' +
+      '<div class="masthead">STARSTRUCK</div>' +
+      '<div class="issue" lang="en"><span>Special tour issue</span><span>Milan · Starlight World Tour</span></div>' +
+      '<h2 class="headline" lang="en">Backstage with <span>Zara Bloom</span></h2>' +
+      '<p class="byline" lang="en">Interview by ' + esc(reporter()) + '</p>' +
+      '<div class="scorecard"><div><div class="stars" role="img" aria-label="' + filled + ' stelle su 5">' + stars + '</div><div class="big-score" style="margin-top:8px">' + s + '<small> / ' + MAX + '</small></div></div>' +
+        '<div style="display:flex;flex-direction:column;gap:10px;min-width:0"><span class="badge" lang="en">' + badge[0] + '</span><p>' + (missing.length ? "Completa tutti i round per vedere il punteggio finale." : badge[1]) + '</p>' +
+        '<ul class="rounds">' + rounds.map(function (r) {
+          return '<li><span>' + r[0] + '</span>' + (doneRound(r[1]) ? '<span>' + r[2] + ' / ' + r[3] + '</span>' : '<span class="missing">non completato</span>') + '</li>';
+        }).join("") + '</ul></div></div>' +
+      '<div class="article" lang="en"><span class="eyebrow">The interview</span><p class="intro">Zara Bloom is only 19, but she is already on her first world tour. Tonight she is singing in Milan. ' + esc(reporter()) + ' met her in her dressing room before the show.</p>' + qa + '</div>' +
+      '<div class="actions">' + (missing.length ? '<button class="btn primary" type="button" data-act="go" data-to="' + missing[0][4] + '">Vai a: ' + missing[0][0] + '</button>' : '<button class="btn primary" type="button" data-act="restart">Gioca ancora</button>') +
+        '<button class="btn" type="button" data-act="notes">Note di grammatica</button></div>' +
+    '</section>';
+  }
+
+  var RENDER = { pass: pPass, brief: pBrief, r1: pR1, r2: pR2, r3: pR3, r4: pR4, cover: pCover };
+
+  /* ================= RENDER ================= */
+  var stage = document.getElementById("stage");
+  var setlist = document.getElementById("setlist");
+  var chip = document.getElementById("score-chip");
+
+  function render() {
+    setlist.innerHTML = PAGES.map(function (p, k) {
+      var cls = k === state.page ? "current" : (doneRound(p.id) ? "done" : "");
+      var num = doneRound(p.id) && k !== state.page ? "✓" : String(k + 1).padStart(2, "0");
+      return '<li class="' + cls + '"><button type="button" data-act="go" data-to="' + k + '"' + (k === state.page ? ' aria-current="step"' : "") + '><span class="n">' + num + '</span>' + p.label + '</button></li>';
+    }).join("");
+    chip.textContent = total() + " / " + MAX;
+    stage.innerHTML = RENDER[PAGES[state.page].id]();
+    var cur = setlist.querySelector(".current");
+    if (cur && cur.scrollIntoView) { try { cur.scrollIntoView({ block: "nearest", inline: "center" }); } catch (e) {} }
+  }
+  function focusAuto() {
+    var el = stage.querySelector("[data-autofocus]");
+    if (el) { try { el.focus({ preventScroll: false }); } catch (e) { el.focus(); } }
+  }
+  function goto(p) {
+    state.page = p; render();
+    try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); }
+  }
+
+  var notes = document.getElementById("notes");
+  var lastFocus = null;
+  function openNotes() {
+    lastFocus = document.activeElement;
+    document.getElementById("notes-body").innerHTML = grammarHTML();
+    notes.hidden = false;
+    notes.querySelector('[data-act="close-notes"]').focus();
+  }
+  function closeNotes() { notes.hidden = true; if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+
+  function resetRound(key) {
+    if (key === "r1") state.r1 = { i: 0, score: 0, answers: [] };
+    if (key === "r2") state.r2 = { i: 0, score: 0, picked: [], results: [], orders: makeOrders() };
+    if (key === "r3") state.r3 = { values: [], checked: false, score: 0, results: [] };
+    if (key === "r4") state.r4 = { i: 0, score: 0, answers: [] };
+  }
+
+  /* ================= EVENTS ================= */
+  document.addEventListener("click", function (e) {
+    if (e.target === notes) { closeNotes(); return; }
+    var b = e.target.closest("[data-act]");
+    if (!b || b.disabled) return;
+    var act = b.dataset.act, r;
+    switch (act) {
+      case "go": goto(+b.dataset.to); break;
+      case "notes": openNotes(); break;
+      case "close-notes": closeNotes(); break;
+      case "r1":
+        r = state.r1;
+        if (r.answers[r.i] === undefined) { var k = +b.dataset.k; r.answers[r.i] = k; if (k === R1[r.i].ok) r.score++; render(); focusAuto(); }
+        break;
+      case "r1-next": state.r1.i++; render(); focusAuto(); break;
+      case "r2-pick":
+        r = state.r2; var t = +b.dataset.t;
+        if (r.picked.indexOf(t) === -1) r.picked.push(t);
+        render(); break;
+      case "r2-unpick": state.r2.picked.splice(+b.dataset.p, 1); render(); break;
+      case "r2-clear": state.r2.picked = []; render(); break;
+      case "r2-check":
+        r = state.r2; var q = R2[r.i], tiles = q.words.concat([q.extra]);
+        var said = r.picked.map(function (x) { return tiles[x]; }).join(" ");
+        var ok = said === q.words.join(" ");
+        r.results[r.i] = { ok: ok, picked: r.picked.slice() };
+        if (ok) r.score++;
+        render(); focusAuto(); break;
+      case "r2-next": state.r2.i++; state.r2.picked = []; render(); focusAuto(); break;
+      case "r3-check":
+        r = state.r3; r.score = 0;
+        r.results = R3.map(function (it, k) {
+          var v = norm(r.values[k]);
+          var good = it.ok.some(function (a) { return norm(a) === v; });
+          if (good) r.score++;
+          return good;
+        });
+        r.checked = true; render(); focusAuto(); break;
+      case "r4":
+        r = state.r4;
+        if (r.answers[r.i] === undefined) { r.answers[r.i] = b.dataset.k; if (b.dataset.k === R4[r.i].k) r.score++; render(); focusAuto(); }
+        break;
+      case "r4-next": state.r4.i++; render(); focusAuto(); break;
+      case "replay": resetRound(b.dataset.key); render(); break;
+      case "restart": var nm = state.name; state = fresh(); state.name = nm; goto(0); break;
+    }
+  });
+  document.addEventListener("input", function (e) {
+    var el = e.target;
+    if (el.id === "reporter-name") {
+      state.name = el.value;
+      var pn = document.getElementById("pass-name");
+      if (pn) pn.textContent = el.value.trim() || "Il tuo nome";
+    } else if (el.dataset && el.dataset.gap !== undefined) {
+      state.r3.values[+el.dataset.gap] = el.value;
+    }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !notes.hidden) closeNotes();
+    if (e.key === "Enter" && e.target.dataset && e.target.dataset.gap !== undefined) {
+      var nx = document.getElementById("gap-" + (+e.target.dataset.gap + 1));
+      if (nx) nx.focus();
+    }
+  });
+
+  /* ================= BOOT ================= */
+  document.documentElement.lang = "it";
+  function start(data) {
+    if (data && data.state && data.state.r2) state = data.state;
+    render();
+  }
+  try { window.claude && window.claude.hot && window.claude.hot.snapshot && window.claude.hot.snapshot(function () { return { state: JSON.parse(JSON.stringify(state)) }; }); } catch (e) {}
+  if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(start);
+  else start((window.claude && window.claude.hot && window.claude.hot.data) || {});
+})();
+</script>
+
+</body>
+</html>
